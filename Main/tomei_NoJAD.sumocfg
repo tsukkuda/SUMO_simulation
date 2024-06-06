@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <!-- 道路等のデータ -->
+        <net-file value="tomei.net.xml"/>
+        <!-- 走行する車両のパラメータやルート -->
+        <route-files value="tomei_edit.rou.xml"/>
+        <!-- 検知器のデータ -->
+        <additional-files value="tomei.poly.xml"/>
+    </input>
+
+    <time>
+        <!-- シミュレーションの開始時刻と終了時刻(秒) -->
+        <begin value="3600"/>
+        <end value="10800"/>
+    </time>
+
+    <processing>
+        <!-- 発生できなかった車両が破棄されるまでの時間 -->
+        <max-depart-delay value="900"/>
+    </processing>
+
+    <gui_only>
+        <!-- GUI上での表示の設定 -->
+        <gui-settings-file value="visual_setting_NoJAD.xml"/>
+    </gui_only>
+
+</configuration>
