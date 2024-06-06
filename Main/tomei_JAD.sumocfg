@@ -14,7 +14,7 @@
     <time>
         <!-- シミュレーションの開始時刻と終了時刻(秒) -->
         <begin value="3600"/>
-        <end value="10800"/>
+        <end value="6000"/>
     </time>
 
     <processing>

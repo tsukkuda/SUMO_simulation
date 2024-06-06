@@ -63,6 +63,9 @@ def main(sumocfg):
 
     #削除用のバッファ
     jad_finish_list = []
+    
+    #csvラベル(リダイレクト)
+    print("time,detector_id,ave_speed")
 
     #すべての車両が完走するまで繰り返す
     while traci.simulation.getMinExpectedNumber():
@@ -70,6 +73,10 @@ def main(sumocfg):
         traci.simulationStep()
         #時間を取得
         time = traci.simulation.getTime()
+        
+        #6000sで打ち切り
+        if time>=6000:
+            break
 
         #終了地点に到着した車両リストを取得
         arrive_list = traci.simulation.getArrivedIDList()
@@ -140,7 +147,11 @@ def main(sumocfg):
                             duration
                             )
                         slow_down_yamato.append(v)
-                        print('slow down : ', v, ' , target_vel : ', decelerated_speed, ' , duration : ', duration)
+                        # print('slow down : ', v, ' , target_vel : ', decelerated_speed, ' , duration : ', duration)
+
+        #csv書き込み(リダイレクト)
+        print(time,",",YAMATO_DETECTOR0,",",traci.lanearea.getLastStepMeanSpeed(YAMATO_DETECTOR0),sep='')
+        print(time,",",YAMATO_DETECTOR1,",",traci.lanearea.getLastStepMeanSpeed(YAMATO_DETECTOR1),sep='')
 
         # JAD control
         if time >= 4200 and time < 4800:
@@ -174,7 +185,7 @@ def main(sumocfg):
 
                     # JAD制御情報を記録する
                     jad_list[v] = dict(decel_step=int(time+duration), keep_step=-1)
-                    print('jad start ID: ', str(v))
+                    # print('jad start ID: ', str(v))
 
     traci.close()
 

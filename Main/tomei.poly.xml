@@ -20,4 +20,14 @@
     <!-- 大和トンネルにいる車両を検知 -->
     <e2Detector id="y_0" lane="31887784_0" pos="0.0" length="280.00" freq="300.00" file="NUL"/>
     <e2Detector id="y_1" lane="31887784_1" pos="0.0" length="280.00" freq="300.00" file="NUL"/>
+
+    <!-- 速度観測 -->
+    <e2Detector id="x_a0" lane="285190605_0" pos="2704.87" length="500.00" freq="300.00" file="NUL"/>
+    <e2Detector id="x_a1" lane="285190605_1" pos="2704.87" length="500.00" freq="300.00" file="NUL"/>
+
+    <!-- <e2Detector id="x_b0" lane="285190605_0" pos="2804.87" length="200.00" freq="300.00" file="NUL"/>
+    <e2Detector id="x_b1" lane="285190605_1" pos="2804.87" length="200.00" freq="300.00" file="NUL"/>
+
+    <e2Detector id="x_c0" lane="285190605_0" pos="2604.87" length="200.00" freq="300.00" file="NUL"/>
+    <e2Detector id="x_c1" lane="285190605_1" pos="2604.87" length="200.00" freq="300.00" file="NUL"/> -->
 </additional>

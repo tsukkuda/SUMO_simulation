@@ -1,5 +1,10 @@
 import traci
 import os
+import csv
+import pandas as pd
+
+import traffic_volume
+# import predict
 
 #ボトルネック区間(大和トンネル)のEdgeID
 # YAMATO_TN = '31887784'
@@ -23,6 +28,20 @@ LANE_AREA_DETECTOR5 = 'e2_5'
 YAMATO_DETECTOR0 = 'y_0'
 YAMATO_DETECTOR1 = 'y_1'
 
+#速度観測区間の検知器
+IFOY_DETECTOR_a0 = 'x_a0'
+IFOY_DETECTOR_a1 = 'x_a1'
+
+IFOY_DETECTOR_b0 = 'x_b0'
+IFOY_DETECTOR_b1 = 'x_b1'
+
+IFOY_DETECTOR_c0 = 'x_c0'
+IFOY_DETECTOR_c1 = 'x_c1'
+
+#定数
+Td=30
+R=100
+
 #サグ部の減速度
 DECELERATION_SAG = 0.24
 
@@ -42,7 +61,9 @@ seed = 4
 
 def main(sumocfg):
     #起動コマンドの設定
-    sumoCmd = ['sumo-gui', '-c', sumocfg]
+    sumoCmd = ['sumo', '-c', sumocfg]
+    #sumoCmd = ['sumo', '-c', sumocfg] GUIなし
+    #sumoCmd = ['sumo-gui', '-c', sumocfg] GUI
 
     #オプション
     #乱数の種の設定
@@ -62,6 +83,21 @@ def main(sumocfg):
     jad_list = {}
     #削除用のバッファ
     remove_list = []
+    
+    #1step前の車両リスト
+    vPre_a_list=[]
+    vPre_b_list=[]
+    vPre_c_list=[]
+    vPre_e2_01_list=[]
+    vPre_e2_23_list=[]
+    vPre_e2_45_list=[]
+    vPre_yamato_list=[]
+    
+    #ログ
+    speed_log=[]
+    
+    #csv生データ出力用ヘッダ
+    print("time,vehicle_ID,position,car_speed")
 
     #すべての車両が完走するまで繰り返す
     while traci.simulation.getMinExpectedNumber():
@@ -70,8 +106,13 @@ def main(sumocfg):
         #時間を取得
         time = traci.simulation.getTime()
         
+        #6000sで打ち切り
+        if time>5000:
+            break
+        
         #終了地点に到着した車両リストを取得
         arrive_list = traci.simulation.getArrivedIDList()
+        
 
         #各リストから到着した車両を削除する
         for v in arrive_list:
@@ -79,6 +120,8 @@ def main(sumocfg):
                 slow_down_yamato.remove(v)
             if v in jad_list.keys():
                 remove_list.append(v)
+                
+
 
         #車両の速度に応じて色を変える
         if time % 1 == 0:
@@ -102,16 +145,22 @@ def main(sumocfg):
                         traci.vehicle.setColor(v, (0, 255, 0, 255))
                     else:
                         traci.vehicle.setColor(v, (0, 255, 255, 255))
+                        
+                #csv生データ出力用
+                if "large" in traci.vehicle.getTypeID(v):
+                    print(time,v,traci.vehicle.getDistance(v),traci.vehicle.getSpeed(v),sep=",")
 
         # サグ部の車両を減速させる
         #4500秒以降はサグ部も減速せずに走行する
-        if time <= 4500:
+        #トンネル内の予測平均速度でやるのがいいかも
+        if time <= 4000:
             #検知器の上にいた車両（サグ部を走行している車両）を取得する
             v_list = []
             v_list += traci.lanearea.getLastStepVehicleIDs(YAMATO_DETECTOR0)
             v_list += traci.lanearea.getLastStepVehicleIDs(YAMATO_DETECTOR1)
 
-            for v in v_list:
+            
+            for v in v_list:    
                 #既に減速の設定済みの車両はスキップ
                 if v in slow_down_yamato:
                     continue
@@ -135,15 +184,99 @@ def main(sumocfg):
                         slow_down_yamato.append(v)
                         # print('slow down : ', v, ' , target_vel : ', decelerated_speed, ' , duration : ', duration)
 
+        
+        #交通量
+        kin_a,vin_a,vPre_a_list=traffic_volume.traffic_volume(IFOY_DETECTOR_a0,IFOY_DETECTOR_a1,vPre_a_list)
+        # print(time, "x_a01", kin_a, vin_a, sep=",")
+        
+        kin_yamato,vin_yamato,vPre_yamato_list=traffic_volume.traffic_volume(YAMATO_DETECTOR0,YAMATO_DETECTOR1,vPre_yamato_list)
+        # print(time, "yamato", kin_yamato, vin_yamato, sep=",")
+        
+        kin_e2_01,vin_e2_01,vPre_e2_01_list=traffic_volume.traffic_volume(LANE_AREA_DETECTOR0,LANE_AREA_DETECTOR1,vPre_e2_01_list)
+        # print(time, "e2_01", kin_e2_01, vin_e2_01, sep=",")
+        
+        kin_e2_23,vin_e2_23,vPre_e2_23_list=traffic_volume.traffic_volume(LANE_AREA_DETECTOR2,LANE_AREA_DETECTOR3,vPre_e2_23_list)
+        # print(time, "e2_23", kin_e2_23, vin_e2_23, sep=",")
+        
+        
+        #目標速度
+        if kin_e2_01!=0 and kin_e2_23!=0:
+            v_tar=kin_yamato*vin_yamato/kin_e2_01
+        else:
+            v_tar=max(vin_e2_01-10,70)
+        # print(v_tar)
+        
+        
+        
+        # #走行距離と速度取得
+        # v_list = traci.vehicle.getIDList()
+        # v_large_list=[]
+        
+        # #自動運転車両のみ抜き出す
+        # for v in v_list:
+        #     if "large" in traci.vehicle.getTypeID(v):
+        #         v_large_list.append(v)
+        
+        # if time%5==0:
+        #     #ログ生成
+        #     for v in v_large_list:
+        #         speed=traci.vehicle.getSpeed(v)
+        #         odo=traci.vehicle.getDistance(v)
+        #         start=odo+speed*Td-R
+        #         end=odo+speed*Td+R
+                
+        #         #範囲に入っている車両の平均速度 
+        #         sum=0
+        #         count=0
+        #         for fv in v_large_list:
+        #             fv_speed=traci.vehicle.getSpeed(fv)
+        #             fv_odo=traci.vehicle.getDistance(fv)
+        #             if start<=fv_odo<=end:
+        #                 sum+=1/(3.6*fv_speed)
+        #                 count+=1
+
+        #         if count!=0:
+        #             front_ave_speed=count/sum
+        #         else:
+        #             #範囲内に車両がいない場合
+        #             front_ave_speed=120
+                
+        #         #ログ追加
+        #         index=-1
+        #         count=0
+        #         for diction in speed_log:
+        #             if v==diction["vehicle_ID"]:
+        #                 index=count
+        #                 break
+        #             count+=1
+                
+        #         if index==-1:
+        #             speed_log.append({"vehicle_ID":v,"list":[[speed,front_ave_speed/3.6]]})
+        #         else:
+        #             if len(speed_log[index]["list"])==17:
+        #                 speed_log[index]["list"].pop(0)
+        #             speed_log[index]["list"].append([(speed),front_ave_speed/3.6])
+                    
+        #         #誤差計算用ログ
+        #         print(time,v,0,speed,sep=",")
+                
+        #     predict.predict_car_vel(speed_log,time)
+
+        
         # 減速制御をする車両リストの初期化
         v_list = []
-        if time >= 4200:
-            if time < 4500:
-                v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR2)
-                v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR3)
-            elif time < 4800:
+
+        if 0<traci.lanearea.getIntervalMeanSpeed(YAMATO_DETECTOR0)<70/3.6:
+            v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR2)
+            if traci.lanearea.getIntervalMeanSpeed(YAMATO_DETECTOR0)<65/3.6:
                 v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR4)
+                
+        if 0<traci.lanearea.getIntervalMeanSpeed(YAMATO_DETECTOR1)<70/3.6:
+            v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR3)
+            if traci.lanearea.getIntervalMeanSpeed(YAMATO_DETECTOR1)<65/3.6:
                 v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR5)
+
+        
 
         for v in v_list:
             # 車両の情報を取得
@@ -158,8 +291,8 @@ def main(sumocfg):
                 continue
 
             # 大型車を減速させる
-            if speed > 70/3.6 and "large" in vehicle_type:
-                decelerated_speed = 70/3.6
+            if speed > v_tar/3.6 and "large" in vehicle_type:
+                decelerated_speed = v_tar/3.6
                 duration = (speed - decelerated_speed) / JAD_DECELERATION
 
                 traci.vehicle.slowDown(
@@ -170,7 +303,7 @@ def main(sumocfg):
 
                 # JAD制御情報を記録する
                 jad_list[v] = dict(decel_step=int(time+duration), keep_step=-1)
-                print('jad : ', v, ' , target_vel : ', decelerated_speed, ' , duration : ', duration)
+                # print('jad : ', v, ' , target_vel : ', decelerated_speed, ' , duration : ', duration)
 
         # エリアを抜けた車両をJAD制御車両リストから削除する
         for v in jad_list.keys():
@@ -183,6 +316,7 @@ def main(sumocfg):
         # リストの初期化
         remove_list = []
 
+    # f.close()
     traci.close()
 
 if __name__ == "__main__":
