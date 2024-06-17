@@ -18,11 +18,11 @@ def generate_car_info(queue,RealData_name): #? queueはlaneのタプルっぽい
     csv_file = open("RealData/"+RealData_name, "r")
     f = csv.reader(csv_file)
     for row in f:
-        time     = int(row[1])
+        time     = int(float(row[1]))
         type     = int(row[2])
         init_vel = float(row[3]) / 3.6
         ss       = float(row[4])
-        lane     = int(row[7])
+        lane     = int(row[7])-1
         timetable[lane].append(time)
         typelist[lane].append(type)
         init_vel_list[lane].append(init_vel)

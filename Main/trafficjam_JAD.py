@@ -63,7 +63,7 @@ seed = 4
 def main(sumocfg):
         
     #my ここからcsv読み込んで車両リスト作成
-    generate_car_info(2,"filename") #
+    generate_car_info([0,1],"data_2021-10-06-1500.csv") #data_日付-1500.csv
     #my ここまでcsv読み込んで車両リスト作成
     
     #起動コマンドの設定
@@ -113,7 +113,14 @@ def main(sumocfg):
         #時間を取得
         time = traci.simulation.getTime()
         
-        #[] ここで時間になったら車両生成する
+        #[] ここで時間になったら車両生成する いろいろ生成条件があるみたい road.py参照
+        # traci.vehicle.add(vehID=str(vehicleID),  # 車両ID
+        #                           typeID="passenger",  # 車両タイプ
+        #                           routeID="r_main",  # ルートID
+        #                           departLane=str(lane_index),  # 出発レーン
+        #                           departSpeed="last",  # 出発時の速度
+        #                           arrivalLane="current",  # 到着レーン
+        #                           depart=time)  # 出発時刻
         
         #6000sで打ち切り
         if time>5000:
