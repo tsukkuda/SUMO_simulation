@@ -4,6 +4,7 @@ import csv
 import pandas as pd
 
 import traffic_volume
+from readdata import generate_car_info
 # import predict
 
 #ボトルネック区間(大和トンネル)のEdgeID
@@ -60,6 +61,11 @@ seed = 4
 # seed = 23423  # Default
 
 def main(sumocfg):
+        
+    #my ここからcsv読み込んで車両リスト作成
+    generate_car_info(2,"filename") #
+    #my ここまでcsv読み込んで車両リスト作成
+    
     #起動コマンドの設定
     sumoCmd = ['sumo', '-c', sumocfg]
     #sumoCmd = ['sumo', '-c', sumocfg] GUIなし
@@ -98,6 +104,7 @@ def main(sumocfg):
     
     #csv生データ出力用ヘッダ
     print("time,vehicle_ID,position,car_speed")
+
 
     #すべての車両が完走するまで繰り返す
     while traci.simulation.getMinExpectedNumber():
