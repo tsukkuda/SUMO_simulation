@@ -113,6 +113,8 @@ def main(sumocfg):
         #時間を取得
         time = traci.simulation.getTime()
         
+        #[] ここで時間になったら車両生成する
+        
         #6000sで打ち切り
         if time>5000:
             break
