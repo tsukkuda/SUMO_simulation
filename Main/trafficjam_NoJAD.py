@@ -1,5 +1,6 @@
 import traci
 import os
+from output import outputData
 
 #ボトルネック区間(大和トンネル)のEdgeID
 # YAMATO_TN = '31887784'
@@ -41,6 +42,17 @@ seed = 4
 # seed = 23423  # Default
 
 def main(sumocfg):
+    #* ここからデータ出力関係
+    #生データ出力フォルダ，ファイル名
+    foldername = 'outputs'
+    filename="testData"+".csv"
+    
+    #生データヘッダー
+    header=["time","ID","position","car_speed"]
+    
+    data=[]
+    #* ここまでデータ出力関係
+
     #起動コマンドの設定
     sumoCmd = ['sumo-gui', '-c', sumocfg]
 
@@ -70,6 +82,11 @@ def main(sumocfg):
         traci.simulationStep()
         #時間を取得
         time = traci.simulation.getTime()
+        
+        #* 6000sで打ち切り
+        if time>6000:
+            outputData(foldername,filename,header,data)
+            break
 
         #終了地点に到着した車両リストを取得
         arrive_list = traci.simulation.getArrivedIDList()
@@ -109,6 +126,17 @@ def main(sumocfg):
                         traci.vehicle.setColor(v, (0, 255, 0, 255))
                     else:
                         traci.vehicle.setColor(v, (0, 255, 255, 255))
+                
+                #* ここからデータ出力関係
+                if time>4000:
+                    if "large" in traci.vehicle.getTypeID(v):
+                        vehId=v
+                        vehIdR=vehId.replace("flow17", "")
+                        vehIdR=vehIdR.replace("largelane", "")
+                        vehIdR=int(float(vehIdR)*1000)
+                        #? time,ID,position,car_spee(秒速?あとで確認)
+                        data.append((time,vehIdR,traci.vehicle.getDistance(v),traci.vehicle.getSpeed(v)))
+                #* ここまでデータ出力関係
 
         # サグ部の車両を減速させる
         #4500秒以降はサグ部も減速せずに走行する
@@ -143,38 +171,38 @@ def main(sumocfg):
                         print('slow down : ', v, ' , target_vel : ', decelerated_speed, ' , duration : ', duration)
 
         # JAD control
-        if time >= 4200 and time < 4800:
-            v_list = []            
+        # if time >= 4200 and time < 4800:
+        #     v_list = []            
             
-            if time < 4600:
-                v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR2)
-                v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR3)
-            else:
-                v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR4)
-                v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR5)
+        #     if time < 4600:
+        #         v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR2)
+        #         v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR3)
+        #     else:
+        #         v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR4)
+        #         v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR5)
 
-            for v in v_list:
-                if v in jad_list.keys():
-                    continue
-                # 車両の情報を取得
-                vehicle_type = traci.vehicle.getTypeID(v)
-                speed = traci.vehicle.getSpeed(v)
+        #     for v in v_list:
+        #         if v in jad_list.keys():
+        #             continue
+        #         # 車両の情報を取得
+        #         vehicle_type = traci.vehicle.getTypeID(v)
+        #         speed = traci.vehicle.getSpeed(v)
 
-                if speed > 70/3.6 and "large" in vehicle_type:
-                    decelerated_speed = 70/3.6
-                    duration = (speed - decelerated_speed) / JAD_DECELERATION
+        #         if speed > 70/3.6 and "large" in vehicle_type:
+        #             decelerated_speed = 70/3.6
+        #             duration = (speed - decelerated_speed) / JAD_DECELERATION
 
-                    # 計算量をなるべくそろえるため命令のみをコメントアウトしています
-                    # traci.vehicle.slowDown(
-                    #     v,
-                    #     decelerated_speed,
-                    #     duration
-                    #     )
-                    # traci.vehicle.setColor(v, (236, 0, 140, 255))
+        #             # 計算量をなるべくそろえるため命令のみをコメントアウトしています
+        #             # traci.vehicle.slowDown(
+        #             #     v,
+        #             #     decelerated_speed,
+        #             #     duration
+        #             #     )
+        #             # traci.vehicle.setColor(v, (236, 0, 140, 255))
 
-                    # JAD制御情報を記録する
-                    jad_list[v] = dict(decel_step=int(time+duration), keep_step=-1)
-                    print('jad start ID: ', str(v))
+        #             # JAD制御情報を記録する
+        #             jad_list[v] = dict(decel_step=int(time+duration), keep_step=-1)
+        #             print('jad start ID: ', str(v))
 
     traci.close()
 
