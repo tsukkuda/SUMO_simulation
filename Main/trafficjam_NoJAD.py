@@ -37,15 +37,20 @@ JAD_DECELERATION = 0.3
 #sumo-guiの設定ファイル
 sumocfg = 'tomei_NoJAD.sumocfg'
 
-#乱数の種
-seed = 4
+#* 乱数の種
+seed = 6852
 # seed = 23423  # Default
+
+#打ち切りの秒数
+stopTime=6000
+#データ採取開始時刻
+outputStartTime=4000
 
 def main(sumocfg):
     #* ここからデータ出力関係
     #生データ出力フォルダ，ファイル名
     foldername = 'outputs'
-    filename="testData"+".csv"
+    filename="test_"+"time"+str(stopTime-outputStartTime)+"_"+"seed"+str(seed)+".csv"
     
     #生データヘッダー
     header=["time","ID","position","car_speed"]
@@ -54,7 +59,7 @@ def main(sumocfg):
     #* ここまでデータ出力関係
 
     #起動コマンドの設定
-    sumoCmd = ['sumo-gui', '-c', sumocfg]
+    sumoCmd = ['sumo', '-c', sumocfg]
 
     #オプション
     #乱数の種の設定
@@ -84,7 +89,7 @@ def main(sumocfg):
         time = traci.simulation.getTime()
         
         #* 6000sで打ち切り
-        if time>6000:
+        if time>stopTime:
             outputData(foldername,filename,header,data)
             break
 
@@ -128,7 +133,7 @@ def main(sumocfg):
                         traci.vehicle.setColor(v, (0, 255, 255, 255))
                 
                 #* ここからデータ出力関係
-                if time>4000:
+                if time>outputStartTime:
                     if "large" in traci.vehicle.getTypeID(v):
                         vehId=v
                         vehIdR=vehId.replace("flow17", "")

@@ -36,9 +36,10 @@ JAD_DECELERATION = 0.3
 #sumo-guiの設定ファイル
 sumocfg = 'tomei_JAD.sumocfg'
 
-#乱数の種
-seed = 4
+#* 乱数の種
+seed = 73102
 # seed = 23423  # Default
+
 
 def main(sumocfg):
     #起動コマンドの設定
