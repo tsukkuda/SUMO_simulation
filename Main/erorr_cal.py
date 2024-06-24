@@ -2,7 +2,7 @@ import pandas as pd
 import math
 
 #step*5秒毎のRMSRE(平均平方二乗誤差率)を求める
-step=500
+step=400
 
 #RMSPEを格納するDataFrame
 rmspe_df=pd.DataFrame()
@@ -11,13 +11,13 @@ rmspe_df=pd.DataFrame()
 add_dict={}
 
 #csv読み込み
-base_df=pd.read_csv("./record_5.csv",encoding="utf-16")
+base_df=pd.read_csv("./record.csv",encoding="utf-8")
 
 #vehicle_IDで分ける(車両ごとにspeed_logを分割)
-veh_group=base_df.groupby("vehicle_ID")
+veh_group=base_df.groupby("ID")
 
 #各車両毎のRMSREを計算
-for vehicle_ID,group_df in base_df.groupby("vehicle_ID"):
+for vehicle_ID,group_df in base_df.groupby("ID"):
     if group_df.query("type ==1").empty:
         add_df=pd.DataFrame({},index=[vehicle_ID])
         continue
@@ -29,7 +29,7 @@ for vehicle_ID,group_df in base_df.groupby("vehicle_ID"):
     #warning対策，timeをindexに指定する
     result_df=(result_base_df.copy()).set_index("time")
     #mergeするためcolumns名を変える
-    result_df.drop(columns=["vehicle_ID","type"],inplace=True)
+    result_df.drop(columns=["ID","type"],inplace=True)
     result_df.rename(columns={"value":"result"},inplace=True)
 
     #predict
@@ -41,7 +41,7 @@ for vehicle_ID,group_df in base_df.groupby("vehicle_ID"):
     #warning対策，timeをindex
     predict_df=(predict_base_df.copy()).set_index("time")
     #mergeするためcolumns名を変える
-    predict_df.drop(columns=["vehicle_ID","type"],inplace=True)
+    predict_df.drop(columns=["ID","type"],inplace=True)
     predict_df.rename(columns={"value":"predict"},inplace=True)
 
 

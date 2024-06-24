@@ -5,10 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python デバッガー: Main",
+            "name": "Python デバッガー: JAD",
             "type": "debugpy",
             "request": "launch",
             "program": "trafficjam_JAD.py",
+            "console": "integratedTerminal",
+            "stopOnEntry": true,
+            "cwd": "${workspaceFolder}/Main",
+            "env": {"PYDEVD_WARN_SLOW_RESOLVE_TIMEOUT": "2"}
+        },
+        {
+            "name": "Python デバッガー: No_JAD",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "trafficjam_NoJAD.py",
             "console": "integratedTerminal",
             "stopOnEntry": true,
             "cwd": "${workspaceFolder}/Main",

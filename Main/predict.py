@@ -17,7 +17,7 @@ tf.get_logger().setLevel("ERROR")
 
 # モデルのパスを取得
 # model_path = os.getcwd() + "/bestmodel.hdf5"
-model_path = os.getcwd() + "/bestmodel_data03.hdf5"
+model_path = os.getcwd() + "/bestmodel_1D.hdf5"
 model = load_model(filepath=model_path)
 
 def process_predict(pred_vel_list):
@@ -28,7 +28,7 @@ def predict_car_vel(speed_log,time):
     '''
     車両の速度を予測する
     '''
-    WindowSize = 15 #入力データのウィンドウサイズ
+    WindowSize = 5 #入力データのウィンドウサイズ #[] モデル生成時5にしてた後で15に戻すこと
     MedianSize = 3  #移動平均を取る大きさ
 
     #移動平均用のマージンを確保して配列を作成
@@ -75,7 +75,7 @@ def predict_car_vel(speed_log,time):
             continue
     
         predSpeed = predVel[i][0] * max_vel#正規化を戻す
-        print(time,log["vehicle_ID"],1,predSpeed,sep=",")
+        print(time,log["ID"],1,predSpeed,sep=",")
         i+=1
     
     

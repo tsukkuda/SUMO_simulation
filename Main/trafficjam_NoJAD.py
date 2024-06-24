@@ -40,6 +40,11 @@ sumocfg = 'tomei_NoJAD.sumocfg'
 seed = 4
 # seed = 23423  # Default
 
+#打ち切りの秒数
+stopTime=6000
+#データ採取開始時刻
+outputStartTime=4000
+
 def main(sumocfg):
     #起動コマンドの設定
     sumoCmd = ['sumo-gui', '-c', sumocfg]
@@ -74,8 +79,8 @@ def main(sumocfg):
         #時間を取得
         time = traci.simulation.getTime()
         
-        #6000sで打ち切り
-        if time>=6000:
+        #設定した時間で打ち切り
+        if time>=stopTime:
             break
 
         #終了地点に到着した車両リストを取得
@@ -148,44 +153,6 @@ def main(sumocfg):
                             )
                         slow_down_yamato.append(v)
                         # print('slow down : ', v, ' , target_vel : ', decelerated_speed, ' , duration : ', duration)
-
-        #csv書き込み(リダイレクト)
-        print(time,",",YAMATO_DETECTOR0,",",traci.lanearea.getLastStepMeanSpeed(YAMATO_DETECTOR0),sep='')
-        print(time,",",YAMATO_DETECTOR1,",",traci.lanearea.getLastStepMeanSpeed(YAMATO_DETECTOR1),sep='')
-
-        # JAD control
-        if time >= 4200 and time < 4800:
-            v_list = []            
-            
-            if time < 4600:
-                v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR2)
-                v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR3)
-            else:
-                v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR4)
-                v_list += traci.lanearea.getLastStepVehicleIDs(LANE_AREA_DETECTOR5)
-
-            for v in v_list:
-                if v in jad_list.keys():
-                    continue
-                # 車両の情報を取得
-                vehicle_type = traci.vehicle.getTypeID(v)
-                speed = traci.vehicle.getSpeed(v)
-
-                if speed > 70/3.6 and "large" in vehicle_type:
-                    decelerated_speed = 70/3.6
-                    duration = (speed - decelerated_speed) / JAD_DECELERATION
-
-                    # 計算量をなるべくそろえるため命令のみをコメントアウトしています
-                    # traci.vehicle.slowDown(
-                    #     v,
-                    #     decelerated_speed,
-                    #     duration
-                    #     )
-                    # traci.vehicle.setColor(v, (236, 0, 140, 255))
-
-                    # JAD制御情報を記録する
-                    jad_list[v] = dict(decel_step=int(time+duration), keep_step=-1)
-                    # print('jad start ID: ', str(v))
 
     traci.close()
 
