@@ -17,7 +17,7 @@ tf.get_logger().setLevel("ERROR")
 
 # モデルのパスを取得
 # model_path = os.getcwd() + "/bestmodel.hdf5"
-model_path = os.getcwd() + "/bestmodel_1D.hdf5"
+model_path = os.getcwd() + "/bestmodel_2D.hdf5"
 model = load_model(filepath=model_path)
 
 def process_predict(pred_vel_list):
@@ -48,7 +48,8 @@ def predict_car_vel(speed_log,time):
             continue
         
         #NOTE shape(1,15,2)の形のndarrayを作成する
-        tmp_data=np.array([log["list"][-17:]])
+        #[] windowsizeが5だったので17->7にしている 変更したら直すこと
+        tmp_data=np.array([log["list"][-7:]])
         input_data = np.append(input_data, tmp_data, axis=0)
 
     if input_data.size == 0:

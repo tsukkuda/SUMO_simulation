@@ -1,6 +1,8 @@
 import traci
 import os
 
+# import predict
+
 #ボトルネック区間(大和トンネル)のEdgeID
 # YAMATO_TN = '31887784'
 # UPSIDE_YAMATO = '285190605'
@@ -26,6 +28,10 @@ YAMATO_DETECTOR1 = 'y_1'
 #ボトルネック区間(大和トンネル)の検知器
 DECELERATION_SAG = 0.24
 
+#定数
+Td=30
+R=50
+
 #減速時の下限速度
 # DECELERATION_RATE = 0.9
 # DECELERATION_DURATION = 3
@@ -41,7 +47,7 @@ seed = 4
 # seed = 23423  # Default
 
 #打ち切りの秒数
-stopTime=6000
+stopTime=4000
 #データ採取開始時刻
 outputStartTime=4000
 
@@ -56,6 +62,14 @@ def main(sumocfg):
     #起動時にシミュレーションを開始する
     sumoCmd.append('--start')
     sumoCmd.append('True')
+    
+    #*オプション追加
+    #出力先のファイル名 多分xml
+    sumoCmd.append('--fcd-output')
+    sumoCmd.append('test.xml')
+    #出力する属性の指定
+    sumoCmd.append('--fcd-output.attributes')
+    sumoCmd.append('speed,odometer')
 
     #GUIの実行
     traci.start(sumoCmd)
@@ -69,8 +83,14 @@ def main(sumocfg):
     #削除用のバッファ
     jad_finish_list = []
     
-    #csvラベル(リダイレクト)
-    print("time,detector_id,ave_speed")
+    #自動運転車両
+    v_large_list=[]
+    
+    #*ログ
+    speed_log=[]
+    
+    #csvデータヘッダ
+    # print("time,ID,type,value")
 
     #すべての車両が完走するまで繰り返す
     while traci.simulation.getMinExpectedNumber():
@@ -103,6 +123,9 @@ def main(sumocfg):
             if time >= item['decel_step']:
                 jad_finish_list.append(v)
 
+        #リストのクリア
+        v_large_list=[]
+        
         #車両の速度に応じて色を変える
         if time % 1 == 0:
             v_list = traci.vehicle.getIDList()
@@ -121,9 +144,62 @@ def main(sumocfg):
                         traci.vehicle.setColor(v, (0, 255, 0, 255))
                     else:
                         traci.vehicle.setColor(v, (0, 255, 255, 255))
+                        
+                
+                if "large" in traci.vehicle.getTypeID(v):
+                    v_large_list.append(v)
+
+        # #* ここからログ関係
+        # if time>outputStartTime:
+        #     if time%15==0:
+        #         #ログ生成
+        #         for v in v_large_list:
+        #             speed=traci.vehicle.getSpeed(v)
+        #             odo=traci.vehicle.getDistance(v)
+        #             start=odo+speed*Td-R
+        #             end=odo+speed*Td+R
+
+        #             #範囲に入っている車両の平均速度 
+        #             sum=0
+        #             count=0
+        #             for fv in v_large_list:
+        #                 fv_speed=traci.vehicle.getSpeed(fv)
+        #                 fv_odo=traci.vehicle.getDistance(fv)
+        #                 if start<=fv_odo<=end:
+        #                     sum+=1/(3.6*fv_speed)
+        #                     count+=1
+
+        #             if count!=0:
+        #                 front_ave_speed=count/sum
+        #             else:
+        #                 #範囲内に車両がいない場合
+        #                 front_ave_speed=120
+
+        #             #ログ追加
+        #             index=-1
+        #             count=0
+        #             for diction in speed_log:
+        #                 if v==diction["ID"]:
+        #                     index=count
+        #                     break
+        #                 count+=1
+
+        #             if index==-1:
+        #                 speed_log.append({"ID":v,"list":[[speed,front_ave_speed/3.6]]})
+        #             else:
+        #                 if len(speed_log[index]["list"])==17:
+        #                     speed_log[index]["list"].pop(0)
+        #                 speed_log[index]["list"].append([(speed),front_ave_speed/3.6])
+
+        #             #誤差計算用ログ time,ID,type,speed
+        #             print(time,v,0,speed,sep=",")
+
+        #         predict.predict_car_vel(speed_log,time)
+        # #* ここまでログ関係
 
         # サグ部の車両を減速させる
         #4500秒以降はサグ部も減速せずに走行する
+        #? 4500s以降でも減速したほうがいいのか?
         if time <= 4500:
             #検知器の上にいた車両（サグ部を走行している車両）を取得する
             v_list = []

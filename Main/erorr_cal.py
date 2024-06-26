@@ -11,7 +11,7 @@ rmspe_df=pd.DataFrame()
 add_dict={}
 
 #csv読み込み
-base_df=pd.read_csv("./record.csv",encoding="utf-8")
+base_df=pd.read_csv("record/record2D_ver2.csv",encoding="utf-16")
 
 #vehicle_IDで分ける(車両ごとにspeed_logを分割)
 veh_group=base_df.groupby("ID")
@@ -47,7 +47,8 @@ for vehicle_ID,group_df in base_df.groupby("ID"):
 
     #merge(実際の値と予測値を並べたデータ)
     merged_df=pd.merge(result_df,predict_df,left_index=True,right_index=True)
-    merged_df["squared"]=((merged_df["result"]-merged_df["predict"])/merged_df["result"])**2
+    merged_df["squared"]=(merged_df["predict"]-merged_df["result"])**2
+    print(merged_df)
     # ただの単純差分の平均を求める場合
     # merged_df["squared"]=(merged_df["result"]-merged_df["predict"])
 
@@ -65,7 +66,7 @@ for vehicle_ID,group_df in base_df.groupby("ID"):
     rmspe_df=pd.concat([rmspe_df,add_df])
     
 #計算結果をcsvで出力
-rmspe_df.to_csv("./rmcre_5.csv")
+rmspe_df.to_csv("./rmcre_2D_ver2.csv")
 
 
 

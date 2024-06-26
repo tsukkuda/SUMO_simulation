@@ -30,7 +30,7 @@ YAMATO_DETECTOR1 = 'y_1'
 
 #定数
 Td=30
-R=100
+R=50
 
 #サグ部の減速度
 DECELERATION_SAG = 0.24
@@ -92,7 +92,7 @@ def main(sumocfg):
     speed_log=[]
     
     #csv生データ出力用ヘッダ
-    print("time,ID,position,car_speed")
+    print("time,ID,type,speed")
 
 
     #すべての車両が完走するまで繰り返す
@@ -196,12 +196,12 @@ def main(sumocfg):
         # # print(time, "e2_23", kin_e2_23, vin_e2_23, sep=",")
         
         
-        #目標速度
-        if kin_e2_01!=0 and kin_e2_23!=0:
-            v_tar=kin_yamato*vin_yamato/kin_e2_01
-        else:
-            v_tar=max(vin_e2_01-10,70)
-        # print(v_tar)
+        # #目標速度
+        # if kin_e2_01!=0 and kin_e2_23!=0:
+        #     v_tar=kin_yamato*vin_yamato/kin_e2_01
+        # else:
+        #     v_tar=max(vin_e2_01-10,70)
+        # # print(v_tar)
         
         
         
