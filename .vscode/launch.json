@@ -22,6 +22,15 @@
             "stopOnEntry": true,
             "cwd": "${workspaceFolder}/Main",
             "env": {"PYDEVD_WARN_SLOW_RESOLVE_TIMEOUT": "2"}
+        },{
+            "name": "Python デバッガー: continuous",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "continuousSim.py",
+            "console": "integratedTerminal",
+            "stopOnEntry": true,
+            "cwd": "${workspaceFolder}/Main",
+            "env": {"PYDEVD_WARN_SLOW_RESOLVE_TIMEOUT": "2"}
         }
     ]
 }

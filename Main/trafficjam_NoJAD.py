@@ -37,20 +37,20 @@ JAD_DECELERATION = 0.3
 #sumo-guiの設定ファイル
 sumocfg = 'tomei_NoJAD.sumocfg'
 
-#* 乱数の種
-seed = 6852
+#CHANGED 乱数はcontinousSim.pyで生成
+# seed = 4
 # seed = 23423  # Default
 
 #打ち切りの秒数
-stopTime=6000
+stopTime=4000
 #データ採取開始時刻
-outputStartTime=4000
+outputStartTime=3600
 
-def main(sumocfg):
+def main(sumocfg,seed):
     #* ここからデータ出力関係
     #生データ出力フォルダ，ファイル名
     foldername = 'outputs'
-    filename="test_"+"time"+str(stopTime-outputStartTime)+"_"+"seed"+str(seed)+".csv"
+    filename="test_"+"time"+str(outputStartTime)+"to"+str(stopTime)+"_"+"seed"+str(seed)+".csv"
     
     #生データヘッダー
     header=["time","ID","position","car_speed"]
