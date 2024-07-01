@@ -42,7 +42,7 @@ sumocfg = 'tomei_NoJAD.sumocfg'
 # seed = 23423  # Default
 
 #打ち切りの秒数
-stopTime=4000
+stopTime=5600
 #データ採取開始時刻
 outputStartTime=3600
 
@@ -56,6 +56,9 @@ def main(sumocfg,seed):
     header=["time","ID","position","car_speed"]
     
     data=[]
+    
+    #発生地点から何mはデータ出力対象から除外する
+    position_lim=400
     #* ここまでデータ出力関係
 
     #起動コマンドの設定
@@ -112,7 +115,7 @@ def main(sumocfg,seed):
         for v, item in jad_list.items():
             if time >= item['decel_step']:
                 jad_finish_list.append(v)
-
+        
         #車両の速度に応じて色を変える
         if time % 1 == 0:
             v_list = traci.vehicle.getIDList()
@@ -135,12 +138,13 @@ def main(sumocfg,seed):
                 #* ここからデータ出力関係
                 if time>outputStartTime:
                     if "large" in traci.vehicle.getTypeID(v):
-                        vehId=v
-                        vehIdR=vehId.replace("flow17", "")
-                        vehIdR=vehIdR.replace("largelane", "")
-                        vehIdR=int(float(vehIdR)*1000)
-                        #? time,ID,position,car_spee(秒速?あとで確認)
-                        data.append((time,vehIdR,traci.vehicle.getDistance(v),traci.vehicle.getSpeed(v)))
+                        if position_lim <= traci.vehicle.getDistance(v):
+                            vehId=v
+                            vehIdR=vehId.replace("flow17", "")
+                            vehIdR=vehIdR.replace("largelane", "")
+                            vehIdR=int(float(vehIdR)*1000)
+                            #? time,ID,position,car_spee(秒速?あとで確認)
+                            data.append((time,vehIdR,traci.vehicle.getDistance(v),traci.vehicle.getSpeed(v)))
                 #* ここまでデータ出力関係
 
         # サグ部の車両を減速させる
@@ -173,7 +177,7 @@ def main(sumocfg,seed):
                             duration
                             )
                         slow_down_yamato.append(v)
-                        print('slow down : ', v, ' , target_vel : ', decelerated_speed, ' , duration : ', duration)
+                        # print('slow down : ', v, ' , target_vel : ', decelerated_speed, ' , duration : ', duration)
 
         # JAD control
         # if time >= 4200 and time < 4800:
@@ -212,4 +216,4 @@ def main(sumocfg,seed):
     traci.close()
 
 if __name__ == "__main__":
-    main(sumocfg)
+    main(sumocfg,4)

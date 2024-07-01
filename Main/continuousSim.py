@@ -14,7 +14,7 @@ if __name__ == "__main__":
         print("===sim:",i," START===")
         
         # 各シミュレーションで異なるseed設定）
-        seed=random.randint(0,1000)
+        seed=random.randint(0,10000)
         #sim実行
         trafficjam_NoJAD.main(trafficjam_NoJAD.sumocfg,seed)
         
