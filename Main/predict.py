@@ -28,7 +28,7 @@ def predict_car_vel(speed_log,time):
     '''
     車両の速度を予測する
     '''
-    WindowSize = 5 #入力データのウィンドウサイズ #[] モデル生成時5にしてた後で15に戻すこと
+    WindowSize = 15 #入力データのウィンドウサイズ
     MedianSize = 3  #移動平均を取る大きさ
 
     #移動平均用のマージンを確保して配列を作成
@@ -47,8 +47,8 @@ def predict_car_vel(speed_log,time):
         if len(log["list"]) < WindowSize+MedianSize-1:
             continue
         
-        #NOTE shape(1,15,2)の形のndarrayを作成する
-        #[] windowsizeが5だったので17->7にしている 変更したら直すこと
+        #NOTE shape(1,80,2)の形のndarrayを作成する
+        #[x] windowsizeが5だったので17->7にしている 変更したら直すこと
         tmp_data=np.array([log["list"][-7:]])
         input_data = np.append(input_data, tmp_data, axis=0)
 

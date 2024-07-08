@@ -1,7 +1,8 @@
 import traci
 import os
 
-# import predict
+import predict
+from collections import deque
 
 #ボトルネック区間(大和トンネル)のEdgeID
 # YAMATO_TN = '31887784'
@@ -123,7 +124,7 @@ def main(sumocfg):
             if time >= item['decel_step']:
                 jad_finish_list.append(v)
 
-        #リストのクリア
+        #自動運転車両リストのクリア
         v_large_list=[]
         
         #車両の速度に応じて色を変える
@@ -149,53 +150,54 @@ def main(sumocfg):
                 if "large" in traci.vehicle.getTypeID(v):
                     v_large_list.append(v)
 
-        # #* ここからログ関係
-        # if time>outputStartTime:
-        #     if time%15==0:
-        #         #ログ生成
-        #         for v in v_large_list:
-        #             speed=traci.vehicle.getSpeed(v)
-        #             odo=traci.vehicle.getDistance(v)
-        #             start=odo+speed*Td-R
-        #             end=odo+speed*Td+R
-
-        #             #範囲に入っている車両の平均速度 
-        #             sum=0
-        #             count=0
-        #             for fv in v_large_list:
-        #                 fv_speed=traci.vehicle.getSpeed(fv)
-        #                 fv_odo=traci.vehicle.getDistance(fv)
-        #                 if start<=fv_odo<=end:
-        #                     sum+=1/(3.6*fv_speed)
-        #                     count+=1
-
-        #             if count!=0:
-        #                 front_ave_speed=count/sum
-        #             else:
-        #                 #範囲内に車両がいない場合
-        #                 front_ave_speed=120
-
-        #             #ログ追加
-        #             index=-1
-        #             count=0
-        #             for diction in speed_log:
-        #                 if v==diction["ID"]:
-        #                     index=count
-        #                     break
-        #                 count+=1
-
-        #             if index==-1:
-        #                 speed_log.append({"ID":v,"list":[[speed,front_ave_speed/3.6]]})
-        #             else:
-        #                 if len(speed_log[index]["list"])==17:
-        #                     speed_log[index]["list"].pop(0)
-        #                 speed_log[index]["list"].append([(speed),front_ave_speed/3.6])
-
-        #             #誤差計算用ログ time,ID,type,speed
-        #             print(time,v,0,speed,sep=",")
-
-        #         predict.predict_car_vel(speed_log,time)
-        # #* ここまでログ関係
+        #* ここからログ関係
+        if time>outputStartTime:
+            #ログ生成
+            for v in v_large_list:
+                speed=traci.vehicle.getSpeed(v)
+                odo=traci.vehicle.getDistance(v)
+                start=odo+speed*Td-R
+                end=odo+speed*Td+R
+                
+                #範囲に入っている車両の平均速度(m/s) 
+                sum=0
+                count=0
+                for fv in v_large_list:
+                    fv_speed=traci.vehicle.getSpeed(fv)
+                    fv_odo=traci.vehicle.getDistance(fv)
+                    if start<=fv_odo<=end:
+                        sum+=1/(fv_speed)
+                        count+=1
+                if count!=0:
+                    front_ave_speed=count/sum
+                else:
+                    #範囲内に車両がいない場合
+                    #? これでいいのか要検討
+                    front_ave_speed=120
+                    
+                #ログ追加
+                index=-1
+                count=0
+                
+                for dict in speed_log:
+                    if v==dict["ID"]:
+                        index=count
+                        break
+                    count+=1
+                
+                if index==-1:
+                    #ID新規追加 queの長さは最大17(window_len+median-1)
+                    speed_log.append({"ID":v,"list":[deque([],17) for _ in range(5)],"count":0})
+                    
+                else:
+                    #時系列分80+移動平均-1(2)
+                    if len(speed_log[index]["list"])==82:
+                        speed_log[index]["list"].popleft
+                    speed_log[index]["list"].append((speed,front_ave_speed))
+                #誤差計算用ログ time,ID,type,speed
+                print(time,v,0,speed,sep=",")
+            predict.predict_car_vel(speed_log,time)
+        #* ここまでログ関係
 
         # サグ部の車両を減速させる
         #4500秒以降はサグ部も減速せずに走行する
